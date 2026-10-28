@@ -70,6 +70,16 @@ class MockIssuingClient:
             out.append({"interval": lim["interval"], "amount": float(amt), "remaining": float(rem)})
         return {"currency": ac["transaction_limits"]["currency"], "limits": out}
 
+    def update_card_controls(self, card_id: str, controls: dict, request_id: str) -> dict:
+        self._req(request_id)
+        card = self.cards[card_id]
+        if card["card_status"] == "CLOSED":
+            raise AirwallexError(400, "card_closed", "closed cards cannot be updated")
+        if "allowed_transaction_count" not in controls:
+            raise AirwallexError(400, "validation_error", "allowed_transaction_count required")
+        card["authorization_controls"] = controls
+        return card
+
     def set_card_status(self, card_id: str, status: str, request_id: str) -> dict:
         self._req(request_id)
         card = self.cards[card_id]

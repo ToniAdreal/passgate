@@ -103,6 +103,11 @@ class RestIssuingClient:
     def create_card(self, payload):
         return self._call("POST", "/api/v1/issuing/cards/create", payload)
 
+    def update_card_controls(self, card_id, controls, request_id):
+        # Re-approval: update per-charge / monthly limits (and allow-lists) in place.
+        return self._call("POST", f"/api/v1/issuing/cards/{card_id}/update",
+                          {"request_id": request_id, "authorization_controls": controls})
+
     def set_card_status(self, card_id, status, request_id):
         return self._call("POST", f"/api/v1/issuing/cards/{card_id}/update",
                           {"request_id": request_id, "card_status": status})
