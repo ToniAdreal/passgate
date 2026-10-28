@@ -21,6 +21,9 @@ Cancellation: anytime
 """
 INVOICE_M1 = QUOTE + "Billing term: MONTHLY\nAmount due: 1200.00\n"
 INVOICE_M2 = QUOTE.replace("$1,200.00", "$1,380.00") + "Billing term: MONTHLY\nAmount due: 1380.00\n"
+# Renewal invoices for the re-approval demo:
+INVOICE_SMALL = QUOTE.replace("$1,200.00", "$1,248.00") + "Billing term: MONTHLY\nAmount due: 1248.00\n"   # +4% vs 1200
+INVOICE_BIG = QUOTE.replace("$1,200.00", "$1,435.20") + "Billing term: MONTHLY\nAmount due: 1435.20\n"      # +15% vs 1248
 
 
 def say(*a):
@@ -56,20 +59,29 @@ def main(backend: str | None = None) -> int:
         say(f"  {label:<17} -> {t.get('status')} {t.get('failure_reason')}")
     pg.freeze("cleared; re-freeze until next PASS")
 
-    say("\n== 4. MONTH 2: vendor raises price")
-    v2 = pg.verify(parse_terms_text(INVOICE_M2), INVOICE_M2)
-    say(f"  {v2.result} diff={json.dumps(v2.diff)}  card={client.get_card(card)['card_status']}")
-    try:
-        pg.arm_card("passgate-agent@example.com")
-    except PermissionError as e:
-        say("  arm refused:", e)
-    say("  -> escalated to human; human re-approves at 1380.00")
-    from dataclasses import replace
-    from .intent import money
-    pg.approve(replace(intent, amount=money("1380.00")), "Toni (demo approver)")
-    # NB: in production the card's limits would be updated via /issuing/cards/{id}/update here
-    v3 = pg.verify(parse_terms_text(INVOICE_M2), INVOICE_M2)
-    say(f"  re-verify: {v3.result}")
+    say(f"\n== 4. MONTH 2: small price rise (+4%, <= {pg.reapproval_threshold_pct}% threshold) -> auto re-approval")
+    r = pg.renew(parse_terms_text(INVOICE_SMALL), "passgate-agent@example.com", INVOICE_SMALL)
+    say(f"  rise {r['rise_pct']}% -> {r['status']}  new per-charge/monthly limits:",
+        json.dumps(client.get_card_limits(card)))
+    # Per-charge cap moved 1200 -> 1248: a charge just over the NEW cap still declines.
+    say("  $0.01 over new cap ->", pg.charge(1248.01, "USD", "5734", "Acme Analytics", capture=False)["failure_reason"])
+    pg.freeze("cleared; re-freeze until next PASS")
+
+    say(f"\n== 5. MONTH 3: big price rise (+15%, > {pg.reapproval_threshold_pct}% threshold) -> human approval")
+    r = pg.renew(parse_terms_text(INVOICE_BIG), "passgate-agent@example.com", INVOICE_BIG)
+    say(f"  rise {r['rise_pct']}% -> {r['status']}  card={client.get_card(card)['card_status']} (frozen, no auto-PASS)")
+    pend = pg.approvals.pending()[0]
+    say("  pending approval:", pend.summary)
+    say("  (human opens the approval screen: python3 -m passgate.approval_server)")
+    done = pg.decide_approval(pend.id, approve=True, by="Toni (demo approver)")
+    say(f"  human approved -> {done['status']}  updated limits:", json.dumps(done["limits"]))
+
+    say("\n== 6. WEBHOOK ALERT: a charge arrives that exceeds the approved amount")
+    event = {"name": "issuing.transaction.failed",
+             "data": {"card_id": card, "amount": 5000.00, "currency": "USD",
+                      "merchant": {"name": "Acme Analytics", "category_code": "5734"}}}
+    res = pg.handle_webhook(event)
+    say(f"  {res['action']} {res['violations']}  card={client.get_card(card)['card_status']}  exceptions={len(pg.exceptions)}")
 
     say("\n== audit log steps:", [a["step"] for a in pg.audit])
     return 0
