@@ -16,3 +16,7 @@
 5. Sandbox USD balance exists (mock assumes 64,000 USD); the Decide step needs a funded USD balance or a demo forecast.
 
 Evidence so far: Oct 27 2:19 AM PT email "[Sandbox] Sandbox Business created an Airwallex Card for you!" — a virtual card already exists in the account (created in the web app / auto-provisioned). That shows issuing is enabled at web-app level; API issuing is not yet tested.
+
+
+## Update 2026-10-28 12:10 PT: day-1 real sandbox check PASSED
+China-registered sandbox account issues virtual USD cards via API; per-transaction/monthly limits, currency (CURRENCY_NOT_ALLOWED), and MCC (MERCHANT_CATEGORY_NOT_ALLOWED) controls decline as designed; over-limit gives LIMIT_EXCEEDED; freeze works. Simulation endpoint worked despite the reported outage. See runs/day1_*.json.
