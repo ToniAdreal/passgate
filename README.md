@@ -19,8 +19,9 @@ charge  ─► Webhook alert: over-amount / wrong category / wrong currency → 
 ## Run (no credentials needed — mock backend)
 ```
 python3 -m passgate.demo                      # full story: 3 declines, auto re-approval, human re-approval, webhook freeze
+python3 -m passgate.extract samples/*.txt     # extract invoices -> VendorTerms -> verifier PASS/FAIL (offline)
 python3 -m passgate.approval_server           # local approval screen on http://127.0.0.1:8777
-python3 -m unittest discover -s tests -t .    # 19 tests
+python3 -m unittest discover -s tests -t .    # 30 tests
 ```
 Python 3.11+, stdlib only.
 
@@ -36,6 +37,7 @@ PASSGATE_BACKEND=rest python3 -m passgate.demo
 | file | role |
 |---|---|
 | `passgate/intent.py` | typed `Intent` / `VendorTerms`, deterministic terms extractor |
+| `passgate/extract.py` | LLM extraction of PDF/email invoices into `VendorTerms` (model proposes, verifier decides; offline regex fallback) |
 | `passgate/decide.py` | monthly vs annual cash simulation against reserve floor |
 | `passgate/verifier.py` | PASS/FAIL, terms hash, HMAC signature, `check_pass` |
 | `passgate/policy.py` | intent → Airwallex `authorization_controls` / card-create payload |
@@ -77,10 +79,36 @@ approvals with Approve/Reject buttons. Wire it to a live agent with
 - Never: see API keys (client holds them), set limits freehand (policy code builds them), reuse a PASS
   (single use), or auto-approve a renewal rise above the threshold.
 
+## Invoice extraction (model proposes, verifier decides)
+`passgate/extract.py` turns an unstructured quote/invoice (plain text, an email body, or a
+PDF via `pdftotext` when available) into a typed `VendorTerms`. The **model only proposes** the
+fields; the existing deterministic `verifier.verify` is still the only thing that issues PASS/FAIL.
+
+- With `ANTHROPIC_API_KEY` set, one call to the Anthropic Messages API (`claude-haiku-4-5`, a
+  small/cheap model) with a strict JSON schema; the reply is validated and coerced into the real
+  dataclass on our side. The key is read from the environment and never logged or committed.
+- With no key, a network failure, or a reply that doesn't validate, a deterministic regex/heuristic
+  extractor runs instead — so the demo and the whole test suite run fully offline.
+
+```
+python3 -m passgate.extract samples/invoice_match.txt            # -> PASS
+python3 -m passgate.extract samples/invoice_amount_changed.txt   # -> FAIL (amount)
+python3 -m passgate.extract samples/invoice_term_changed.txt     # -> FAIL (billing term)
+```
+```python
+from passgate.extract import extract_terms, read_document
+from passgate.verifier import verify
+terms = extract_terms(read_document("invoice.pdf"))   # LLM if key present, else heuristic
+verdict = verify(approved_intent, terms, raw_text)     # code decides, not the model
+```
+`samples/` holds three clearly-marked **example** invoices: one that matches the approved intent
+(PASS) and two that should FAIL (a changed amount, and a switch to annual billing).
+
 ## TODO (weeks 2–3, see ../IDEA.md)
 - Wire the webhook handler to a live endpoint and confirm the real HMAC header names on sandbox events.
-- LLM extraction of PDF/email invoices into `VendorTerms` (model proposes, verifier decides).
 - <5-min video; repo for submission (Toni decides public/private).
 
-Done (this build): card-limit update on re-approval (`/issuing/cards/{id}/update` authorization_controls);
-webhook-style alert handler (HMAC x-timestamp + x-signature) → freeze + exception; local approval screen.
+Done (this build): LLM extraction of PDF/email invoices into `VendorTerms` (model proposes, verifier
+decides; offline regex fallback + `samples/`); card-limit update on re-approval
+(`/issuing/cards/{id}/update` authorization_controls); webhook-style alert handler
+(HMAC x-timestamp + x-signature) → freeze + exception; local approval screen.

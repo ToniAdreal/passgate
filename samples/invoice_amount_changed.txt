@@ -1,0 +1,23 @@
+*** EXAMPLE / SAMPLE INVOICE — synthetic test data, NOT a real bill ***
+*** This one has a CHANGED AMOUNT vs the approved intent and should FAIL. ***
+
+ACME ANALYTICS, INC.
+123 Market Street, San Francisco, CA 94103
+billing@acme-analytics.example
+
+INVOICE  #2026-0051
+Date: 2026-03-01
+
+Vendor: Acme Analytics
+Bill to: PassGate Demo Co.
+
+Description: Acme Analytics — Pro plan subscription (price adjustment)
+Billing term: Monthly
+Monthly price: $1,380.00
+Annual price: $11,808.00
+Currency: USD
+MCC: 5734
+Cancellation: anytime
+
+Amount due: $1,380.00
+Please remit payment within 30 days.
