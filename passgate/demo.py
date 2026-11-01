@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import json
+import time
 import sys
 
 from .agent import PassGate
@@ -37,7 +38,12 @@ def main(backend: str | None = None) -> int:
     terms = parse_terms_text(QUOTE)
 
     say("\n== 1. DECIDE")
-    intent, analysis = pg.propose(terms, weekly_net_outflow=350, reserve_floor=50000)
+    # Keep the same story on any backend: reserve floor sits 14,000 below live cash
+    # (mock: 64,000 cash / 50,000 floor). A large sandbox balance would otherwise
+    # make annual "safe", and the monthly invoices below would correctly FAIL.
+    cash = client.get_balance(terms.currency)
+    floor = max(float(cash) - 14000, 0)
+    intent, analysis = pg.propose(terms, weekly_net_outflow=350, reserve_floor=floor)
     for line in intent.rationale:
         say("  -", line)
     say("  options:", json.dumps(analysis, default=str))
@@ -45,10 +51,13 @@ def main(backend: str | None = None) -> int:
 
     say("\n== 2. VERIFY month-1 invoice")
     v = pg.verify(parse_terms_text(INVOICE_M1), INVOICE_M1)
-    say(f"  {v.result} terms_hash={v.terms_hash[:16]}... pass_id={v.pass_id}")
+    say(f"  {v.result} terms_hash={(v.terms_hash or '-')[:16]}... pass_id={v.pass_id}")
+    if not v.ok:
+        say("  diff:", json.dumps(v.diff, default=str))
+        return 1
 
     say("\n== 3. SPEND")
-    card = pg.arm_card("passgate-agent@example.com")
+    card = pg.arm_card(f"passgate-agent+{int(time.time())}@example.com")  # sandbox rejects reused cardholder emails
     say("  card:", card, "limits:", json.dumps(client.get_card_limits(card)))
     ok = pg.charge(1200.00, "USD", "5734", "Acme Analytics")
     say(f"  exact amount      -> {ok.get('status')} {ok.get('transaction_type')}")
