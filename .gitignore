@@ -7,3 +7,6 @@ __pycache__/
 *.pyc
 runs/
 .venv/
+
+# local demo capture drafts
+docs/video/

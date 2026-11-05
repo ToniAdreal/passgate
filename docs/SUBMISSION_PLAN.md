@@ -2,12 +2,12 @@
 
 Required: working demo, video walkthrough < 5 min, repository link with setup instructions.
 
-## Status (2026-11-04 2:20 PM PT)
-- [x] Live Airwallex sandbox demo runs end-to-end (runs/rest_demo_1101_1558c.log)
+## Status (2026-11-05 8:30 AM PT)
+- [x] Live Airwallex sandbox demo runs end-to-end (re-probed 2026-11-05; also runs/rest_demo_1101_1558c.log)
 - [x] README with mock + sandbox setup steps
 - [ ] Repo ToniAdreal/passgate is PRIVATE -> needs Toni's approval to make public (or confirm judges accept private)
 - [x] README status line fixed and pushed (2026-11-04 5:25 PM PT)
-- [ ] Demo video (< 5 min) not recorded yet
+- [ ] Demo video (< 5 min) not recorded yet (local draft slideshow only at docs/video/passgate_demo_draft.mp4, not submission-ready)
 - [ ] HackerEarth submission form not filled
 
 ## Video script (~4 min, terminal recording of `PASSGATE_BACKEND=rest python3 -m passgate.demo` + approval screen)
