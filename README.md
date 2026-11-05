@@ -2,7 +2,7 @@
 
 Airwallex Agentic Banking Hackathon, Starter Kit 2 (Intent-Bound Purchase Agent).
 Status: build-phase scaffold (2026-10-28). Local/private only, no remote.
-
+Status: working demo on the live Airwallex sandbox (2026-11-01). Setup steps below cover both the mock and sandbox backends.
 An agent picks how to pay for a SaaS renewal using live cash (Decide), checks every
 quote/invoice against the approved intent with a deterministic verifier (Verify), and
 only then arms an Airwallex virtual card whose controls equal the approved terms (Spend).
