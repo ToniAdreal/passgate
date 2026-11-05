@@ -6,7 +6,7 @@ Required: working demo, video walkthrough < 5 min, repository link with setup in
 - [x] Live Airwallex sandbox demo runs end-to-end (runs/rest_demo_1101_1558c.log)
 - [x] README with mock + sandbox setup steps
 - [ ] Repo ToniAdreal/passgate is PRIVATE -> needs Toni's approval to make public (or confirm judges accept private)
-- [ ] README line 5 still says "Local/private only, no remote" -> fix before submission
+- [x] README status line fixed and pushed (2026-11-04 5:25 PM PT)
 - [ ] Demo video (< 5 min) not recorded yet
 - [ ] HackerEarth submission form not filled
 
