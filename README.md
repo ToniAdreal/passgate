@@ -1,7 +1,6 @@
 # PassGate — no verified PASS, no spend
 
 Airwallex Agentic Banking Hackathon, Starter Kit 2 (Intent-Bound Purchase Agent).
-Status: build-phase scaffold (2026-10-28). Local/private only, no remote.
 Status: working demo on the live Airwallex sandbox (2026-11-01). Setup steps below cover both the mock and sandbox backends.
 An agent picks how to pay for a SaaS renewal using live cash (Decide), checks every
 quote/invoice against the approved intent with a deterministic verifier (Verify), and
@@ -16,18 +15,43 @@ renewal ─► Re-approve: small rise auto-PASS (updates card limits); rise > th
 charge  ─► Webhook alert: over-amount / wrong category / wrong currency → freeze + exception
 ```
 
+> **Sandbox only.** PassGate talks exclusively to the Airwallex **sandbox** (`api.sandbox.airwallex.com`);
+> the REST client refuses any non-sandbox base URL. No real money or real cards are involved.
+
+## Setup
+Prerequisites: Python 3.11+ (stdlib only, no `pip install` needed); optional `pdftotext` (poppler) for PDF invoices.
+```
+git clone https://github.com/ToniAdreal/passgate.git && cd passgate
+cp .env.example .env        # placeholders only; .env is gitignored — never commit real values
+```
+Environment variables (see `.env.example`):
+
+| var | needed for | value |
+|---|---|---|
+| `PASSGATE_BACKEND` | all | `mock` (default, offline) or `rest` (Airwallex sandbox) |
+| `PASSGATE_SIGNING_KEY` | all | random hex, e.g. `python3 -c "import secrets;print(secrets.token_hex(32))"` |
+| `AIRWALLEX_CLIENT_ID` / `AIRWALLEX_API_KEY` | `rest` only | your Airwallex **sandbox** credentials |
+| `AIRWALLEX_BASE_URL` | `rest` only | `https://api.sandbox.airwallex.com` |
+| `ANTHROPIC_API_KEY` | optional | enables LLM invoice extraction; without it a regex extractor runs offline |
+
+Load them into your shell before running, e.g. `set -a; . ./.env; set +a`.
+
 ## Run (no credentials needed — mock backend)
 ```
 python3 -m passgate.demo                      # full story: 3 declines, auto re-approval, human re-approval, webhook freeze
 python3 -m passgate.extract samples/*.txt     # extract invoices -> VendorTerms -> verifier PASS/FAIL (offline)
 python3 -m passgate.approval_server           # local approval screen on http://127.0.0.1:8777
-python3 -m unittest discover -s tests -t .    # 30 tests
+```
+
+## Tests
+```
+python3 -m unittest discover -s tests -t .    # 30 tests, fully offline (mock backend, no keys needed)
 ```
 Python 3.11+, stdlib only.
 
 ## Run against the Airwallex sandbox
 ```
-cp .env.example .env    # fill AIRWALLEX_CLIENT_ID / AIRWALLEX_API_KEY (sandbox only; .env is gitignored)
+# fill AIRWALLEX_CLIENT_ID / AIRWALLEX_API_KEY in .env (sandbox only), then: set -a; . ./.env; set +a
 python3 scripts/day1_check.py                 # capability check, writes runs/day1_*.json
 PASSGATE_BACKEND=rest python3 -m passgate.demo
 ```
@@ -101,12 +125,11 @@ from passgate.verifier import verify
 terms = extract_terms(read_document("invoice.pdf"))   # LLM if key present, else heuristic
 verdict = verify(approved_intent, terms, raw_text)     # code decides, not the model
 ```
-`samples/` holds three clearly-marked **example** invoices: one that matches the approved intent
+`samples/` holds three clearly-marked **example** invoices (fictional vendor and data, not real invoices): one that matches the approved intent
 (PASS) and two that should FAIL (a changed amount, and a switch to annual billing).
 
-## TODO (weeks 2–3, see ../IDEA.md)
+## Next steps
 - Wire the webhook handler to a live endpoint and confirm the real HMAC header names on sandbox events.
-- <5-min video; repo for submission (Toni decides public/private).
 
 Done (this build): LLM extraction of PDF/email invoices into `VendorTerms` (model proposes, verifier
 decides; offline regex fallback + `samples/`); card-limit update on re-approval
