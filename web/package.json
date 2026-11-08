@@ -1,0 +1,20 @@
+{
+  "name": "passgate",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PassGate: an intent-bound purchase agent that can only spend after a verified PASS (Airwallex sandbox replay mode).",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/src/server.js",
+    "test": "tsc -p tsconfig.json && node --test dist/test/*.test.js"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.19.43",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PassGate — an intent-bound purchase agent</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header>
+  <div>
+    <h1>PassGate</h1>
+    <p class="tagline">A purchase agent that can only spend after a verified PASS.</p>
+  </div>
+  <span class="mode-badge" title="The spend step replays outcomes actually observed on the Airwallex sandbox. No live Airwallex connection. The verification engine, approval flow, freeze logic and evidence chain run live.">SANDBOX REPLAY MODE</span>
+</header>
+
+<p class="disclosure">
+  Sandbox replay mode: the spend step replays outcomes actually observed on the
+  Airwallex sandbox (card &ldquo;PassGate Acme Analytics&rdquo;, 2026-10-28 to 2026-11-02).
+  There is no live Airwallex connection. The PASS gate, approval flow, freeze
+  logic and evidence chain are fully real and run live in this app.
+</p>
+
+<main>
+  <section id="card-section" aria-label="Card status">
+    <h2>Card</h2>
+    <div id="card-status">Loading&hellip;</div>
+    <div id="card-actions"></div>
+  </section>
+
+  <section id="policy-section" aria-label="Policy summary">
+    <h2>Policy</h2>
+    <div id="policy-summary">Loading&hellip;</div>
+    <p>Spend total (this session): <strong id="spend-total">—</strong></p>
+  </section>
+
+  <section id="narrative-section" aria-label="Demo arc">
+    <h2>Demo arc</h2>
+    <ol id="narrative">Loading&hellip;</ol>
+  </section>
+
+  <section id="create-section" aria-label="Create intent">
+    <h2>New purchase intent</h2>
+    <form id="intent-form">
+      <label>Merchant
+        <input name="merchant" type="text" value="Acme Analytics" required>
+      </label>
+      <label>Amount
+        <input name="amount" type="number" step="0.01" min="0" value="1200.00" required>
+      </label>
+      <label>Currency
+        <input name="currency" type="text" value="USD" required>
+      </label>
+      <label>Category
+        <select name="category">
+          <option value="analytics">analytics</option>
+          <option value="software">software</option>
+          <option value="cloud">cloud</option>
+          <option value="saas">saas</option>
+          <option value="entertainment">entertainment (not allowed)</option>
+          <option value="travel">travel (not allowed)</option>
+        </select>
+      </label>
+      <label>Purpose
+        <input name="purpose" type="text" value="Acme Analytics annual team seat" required>
+      </label>
+      <label>Quoted price (optional, defaults to amount)
+        <input name="quotedPrice" type="number" step="0.01" min="0" placeholder="e.g. 1150.00">
+      </label>
+      <button type="submit">Create intent</button>
+    </form>
+    <p id="form-message" role="status"></p>
+  </section>
+
+  <section id="intents-section" aria-label="Intent queue">
+    <h2>Intent queue</h2>
+    <table id="intent-table">
+      <thead>
+        <tr>
+          <th>ID</th><th>Merchant</th><th>Amount</th><th>Category</th><th>Status</th><th>Checks / reason</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="intent-rows">
+        <tr><td colspan="7">Loading&hellip;</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="observed-section" aria-label="Observed sandbox cases">
+    <h2>Observed sandbox cases</h2>
+    <p>The six outcomes actually observed on the Airwallex sandbox. The seeded
+    intents above replay each one through the live PASS gate.</p>
+    <table id="observed-table">
+      <thead>
+        <tr><th>Case</th><th>Outcome</th><th>Gate agrees</th><th>Description</th></tr>
+      </thead>
+      <tbody id="observed-rows">
+        <tr><td colspan="4">Loading&hellip;</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="evidence-section" aria-label="Evidence log">
+    <h2>Evidence log</h2>
+    <p>
+      Every decision is sealed into a SHA-256 hash chain
+      (<code>hash = sha256(prevHash + canonical JSON)</code>).
+      <button id="verify-btn" type="button">Verify chain</button>
+      <a id="export-link" href="/api/evidence/export" download="passgate-evidence.json">Export JSON</a>
+      <button id="tamper-btn" type="button" title="Demo only: mutates one stored record in memory to show verification detects it.">Tamper demo</button>
+      <button id="reset-btn" type="button">Reset demo</button>
+    </p>
+    <p id="verify-result" role="status"></p>
+    <table id="evidence-table">
+      <thead>
+        <tr><th>#</th><th>Time</th><th>Type</th><th>Intent</th><th>Hash</th><th>Data</th></tr>
+      </thead>
+      <tbody id="evidence-rows">
+        <tr><td colspan="6">Loading&hellip;</td></tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+
+<footer>
+  <p>PassGate — Airwallex Agentic Banking Hackathon, Track 2. Sandbox replay mode:
+  no live Airwallex connection; spend outcomes replay the observed sandbox cases.
+  See README.md for the full disclosure and the mapping to real sandbox evidence.</p>
+</footer>
+
+<script src="/app.js"></script>
+</body>
+</html>

@@ -49,6 +49,17 @@ python3 -m unittest discover -s tests -t .    # 30 tests, fully offline (mock ba
 ```
 Python 3.11+, stdlib only.
 
+## Web dashboard demo (TypeScript, `web/`)
+A second implementation of the same PASS gate with a browser dashboard: card
+status, policy summary, intent queue with approve/reject/spend/reprice, the six
+observed sandbox cases replayed, and a SHA-256 evidence log with chain
+verification. It runs in sandbox-replay mode (no live Airwallex connection).
+```
+cd web && pnpm install && pnpm test   # 16 tests
+pnpm start                            # http://localhost:8080
+```
+The hosted demo for the hackathon submission is this dashboard.
+
 ## Run against the Airwallex sandbox
 ```
 # fill AIRWALLEX_CLIENT_ID / AIRWALLEX_API_KEY in .env (sandbox only), then: set -a; . ./.env; set +a
